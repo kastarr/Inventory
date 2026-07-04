@@ -30,13 +30,13 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
       if (data.success) {
         setAuthenticatedUser(data.account);
       } else {
-        setError(data.message || "Invalid credentials");
+        setError(data.message || "Invalid name or PIN. Please try again.");
       }
     } catch (err) {
-      if (phone === "555-0100" && pin === "1234") {
-        setAuthenticatedUser({ id: "acc-1", name: "Admin User", role: "admin", active_project_ids: ["proj-1"] });
+      if (phone.toLowerCase() === "krees" && pin === "1234") {
+        setAuthenticatedUser({ id: "acc-1", name: "Krees", role: "admin", active_project_ids: ["proj-1"] });
       } else {
-        setError("Network error. Try 555-0100 / 1234 in offline mode.");
+        setError("Network error. Try your name + PIN 1234 in offline mode.");
       }
     }
   };
@@ -84,7 +84,8 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
     <div className="min-h-screen flex items-center justify-center bg-surface-abyss text-on-surface p-6">
       <div className="w-full max-w-sm bg-surface p-10 rounded-2xl border border-border-whisper shadow-lg">
         <h1 className="font-sans text-3xl font-extrabold text-on-surface mb-2 text-center tracking-wide"><span className="text-primary mr-1">/</span>ACASO</h1>
-        <p className="font-sans text-sm text-text-muted mb-10 text-center font-medium">Terminal Authentication</p>
+        <p className="font-sans text-sm text-text-muted mb-2 text-center font-medium">Store Management Terminal</p>
+        <p className="font-sans text-xs text-text-muted mb-8 text-center">Sign in with your name &amp; PIN</p>
         
         {error && (
           <div className="bg-status-alert/10 border border-status-alert text-status-alert px-4 py-3 rounded-lg mb-6 font-sans text-sm font-semibold">
@@ -94,29 +95,47 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div>
-            <label className="font-sans text-sm font-bold text-on-surface block mb-2">Phone Number</label>
+            <label className="font-sans text-sm font-bold text-on-surface block mb-2">Your Name</label>
             <input 
               type="text" 
               value={phone}
               onChange={e => setPhone(e.target.value)}
               className="w-full bg-surface-plate border border-border-whisper rounded-xl h-12 px-4 text-on-surface font-sans focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors placeholder:text-text-muted"
-              placeholder="555-0100"
+              placeholder="e.g. Krees, Princess, Mr Tosin..."
+              autoComplete="username"
             />
           </div>
           <div>
-            <label className="font-sans text-sm font-bold text-on-surface block mb-2">Secure PIN</label>
+            <label className="font-sans text-sm font-bold text-on-surface block mb-2">PIN</label>
             <input 
               type="password" 
               value={pin}
               onChange={e => setPin(e.target.value)}
               className="w-full bg-surface-plate border border-border-whisper rounded-xl h-12 px-4 text-on-surface font-sans tracking-widest focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors placeholder:text-text-muted"
-              placeholder="****"
+              placeholder="••••"
+              autoComplete="current-password"
             />
           </div>
           <button type="submit" className="tactile-btn mt-6 w-full h-12 bg-primary text-white font-sans text-sm font-bold rounded-xl shadow-sm hover:opacity-90 transition-opacity">
-            Authorize Connection
+            Sign In
           </button>
         </form>
+
+        <div className="mt-6 p-3 bg-surface-plate border border-border-whisper rounded-xl">
+          <p className="font-sans text-[10px] font-bold text-text-muted uppercase tracking-wider mb-2">Team Members</p>
+          <div className="flex flex-wrap gap-1.5">
+            {['Krees', 'Princess', 'Loveth', 'Mr Tosin', 'Habeeb', 'Seyi', 'Love', 'Steph', 'Miracle', 'James', 'Josh'].map(name => (
+              <button
+                key={name}
+                type="button"
+                onClick={() => setPhone(name)}
+                className="font-sans text-[10px] font-bold px-2 py-1 bg-surface rounded border border-border-whisper hover:border-primary hover:text-primary text-text-muted transition-colors"
+              >
+                {name}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

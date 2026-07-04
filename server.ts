@@ -258,8 +258,9 @@ seedDamage.run("dmg-2", "DECO-0002", "trx-14", "acc-3", "acc-4", 12000.0, "Chipp
 
 app.post("/api/auth/login", (req, res) => {
   const { phone_number, pin } = req.body;
-  const stmt = db.prepare("SELECT id, name, role, active_project_ids FROM accounts WHERE phone_number = ? AND pin_hash = ?");
-  const account = stmt.get(phone_number, pin) as any;
+  // Accept login by name (case-insensitive) or phone_number for backward compat
+  const stmt = db.prepare("SELECT id, name, role, active_project_ids FROM accounts WHERE (LOWER(name) = LOWER(?) OR phone_number = ?) AND pin_hash = ?");
+  const account = stmt.get(phone_number, phone_number, pin) as any;
   
   if (account) {
     if (account.active_project_ids) {
