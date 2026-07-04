@@ -1,0 +1,84 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Satoshi", "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-display: "Satoshi", "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Backgrounds */
+  --color-surface-abyss: #09090b;
+  --color-surface-plate: #18181b;
+  --color-surface: #18181b;
+  --color-surface-elevated: #1f1f23;
+  --color-surface-container: #1f1f23;
+  --color-surface-container-high: #27272a;
+  --color-surface-container-highest: #3f3f46;
+  --color-surface-container-low: #18181b;
+  --color-surface-container-lowest: #09090b;
+
+  /* Accents */
+  --color-primary: #f97316;
+  --color-on-primary: #fafafa;
+  --color-primary-container: #ea580c;
+  --color-on-primary-container: #fafafa;
+  
+  --color-secondary: #f97316;
+  --color-on-secondary: #fafafa;
+
+  /* Text */
+  --color-on-surface: #fafafa;
+  --color-text-muted: #a1a1aa;
+  
+  /* Borders */
+  --color-border-whisper: rgba(255, 255, 255, 0.08);
+
+  /* Status Colors */
+  --color-status-ready: #10b981;
+  --color-status-transit: #3b82f6;
+  --color-status-alert: #ef4444;
+  --color-status-missing: #ef4444;
+  --color-status-reserved: #a1a1aa;
+  --color-status-inuse: #f97316;
+
+  --color-gold: #C9A84C;
+  
+  --color-sidebar: #09090b;
+  --color-sidebar-text: #fafafa;
+  --color-sidebar-muted: #a1a1aa;
+  --color-sidebar-hover: rgba(255, 255, 255, 0.05);
+  --color-sidebar-active: #18181b;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-surface-abyss);
+    color: var(--color-on-surface);
+    font-family: var(--font-sans);
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.tactile-btn {
+  transition: transform 100ms ease-out, background-color 200ms ease-out, opacity 200ms ease-out;
+}
+.tactile-btn:active {
+  transform: scale(0.97);
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite linear;
+}
