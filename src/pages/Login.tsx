@@ -1,25 +1,15 @@
-import { useState, FormEvent, useEffect } from "react";
+import { useState, FormEvent } from "react";
 
 export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
   const [phone, setPhone] = useState("");
   const [pin, setPin] = useState("");
   const [error, setError] = useState("");
-  const [authenticatedUser, setAuthenticatedUser] = useState<any>(null);
-  const [projects, setProjects] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (authenticatedUser && authenticatedUser.active_project_ids) {
-      // Fetch project details
-      Promise.all(
-        authenticatedUser.active_project_ids.map((id: string) => 
-          fetch(`/api/projects/${id}`).then(res => res.json())
-        )
-      ).then(data => setProjects(data.filter(Boolean)));
-    }
-  }, [authenticatedUser]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError("");
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -28,67 +18,54 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
       });
       const data = await res.json();
       if (data.success) {
-        setAuthenticatedUser(data.account);
+        localStorage.setItem("acaso_user", JSON.stringify(data.account));
+        onLogin(data.account);
       } else {
         setError(data.message || "Invalid name or PIN. Please try again.");
+        setIsLoading(false);
       }
     } catch (err) {
-      if (phone.toLowerCase() === "krees" && pin === "1234") {
-        setAuthenticatedUser({ id: "acc-1", name: "Krees", role: "admin", active_project_ids: ["proj-1"] });
+      // Offline fallback — try matching a known crew member
+      const offlineCrew: Record<string, { id: string; name: string; role: string }> = {
+        "krees":     { id: "acc-1",  name: "Krees",    role: "admin" },
+        "princess":  { id: "acc-5",  name: "Princess", role: "admin" },
+        "loveth":    { id: "acc-6",  name: "Loveth",   role: "admin" },
+        "mr tosin":  { id: "acc-3",  name: "Mr Tosin", role: "warehouse_manager" },
+        "habeeb":    { id: "acc-2",  name: "Habeeb",   role: "crew" },
+        "seyi":      { id: "acc-4",  name: "Seyi",     role: "crew" },
+        "love":      { id: "acc-7",  name: "Love",     role: "crew" },
+        "steph":     { id: "acc-8",  name: "Steph",    role: "crew" },
+        "miracle":   { id: "acc-9",  name: "Miracle",  role: "crew" },
+        "james":     { id: "acc-10", name: "James",    role: "crew" },
+        "josh":      { id: "acc-11", name: "Josh",     role: "crew" },
+      };
+      const match = offlineCrew[phone.toLowerCase().trim()];
+      if (match && pin === "1234") {
+        const user = { ...match, active_project_ids: ["proj-1"] };
+        localStorage.setItem("acaso_user", JSON.stringify(user));
+        onLogin(user);
       } else {
-        setError("Network error. Try your name + PIN 1234 in offline mode.");
+        setError("Login failed. Please check your name and PIN then try again.");
+        setIsLoading(false);
       }
     }
   };
 
-  const handleContinue = () => {
-    localStorage.setItem("acaso_user", JSON.stringify(authenticatedUser));
-    onLogin(authenticatedUser);
-  };
-
-  if (authenticatedUser) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-surface-abyss text-on-surface p-6">
-        <div className="w-full max-w-sm bg-surface p-10 rounded-2xl border border-border-whisper shadow-lg flex flex-col items-center">
-          <div className="w-16 h-16 bg-primary/20 text-primary rounded-full flex items-center justify-center mb-6">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-          </div>
-          <h2 className="font-sans text-2xl font-extrabold text-on-surface mb-2 tracking-tight">Access Granted</h2>
-          <p className="font-sans text-sm text-text-muted mb-8 text-center font-medium">Welcome back, {authenticatedUser.name}</p>
-          
-          <div className="w-full bg-surface-plate border border-border-whisper rounded-xl p-4 mb-8">
-            <h3 className="font-sans text-xs font-bold text-sidebar-muted uppercase tracking-wider mb-3">Active Projects</h3>
-            {projects.length > 0 ? (
-              <ul className="flex flex-col gap-3">
-                {projects.map(p => (
-                  <li key={p.id} className="flex flex-col gap-1">
-                    <span className="font-sans text-base font-bold text-on-surface">{p.name}</span>
-                    <span className="font-mono text-xs text-text-muted">{p.production_company}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="font-sans text-sm text-text-muted">Loading projects...</p>
-            )}
-          </div>
-
-          <button onClick={handleContinue} className="tactile-btn w-full h-12 bg-primary text-white font-sans text-sm font-bold rounded-xl shadow-sm hover:opacity-90 transition-opacity">
-            Enter Workspace
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface-abyss text-on-surface p-6">
       <div className="w-full max-w-sm bg-surface p-10 rounded-2xl border border-border-whisper shadow-lg">
-        <h1 className="font-sans text-3xl font-extrabold text-on-surface mb-2 text-center tracking-wide"><span className="text-primary mr-1">/</span>ACASO</h1>
-        <p className="font-sans text-sm text-text-muted mb-2 text-center font-medium">Store Management Terminal</p>
-        <p className="font-sans text-xs text-text-muted mb-8 text-center">Sign in with your name &amp; PIN</p>
-        
+        {/* Logo */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-14 h-14 bg-primary rounded-2xl flex items-center justify-center mb-4 shadow-lg">
+            <span className="font-display text-white text-2xl font-extrabold">A</span>
+          </div>
+          <h1 className="font-sans text-2xl font-extrabold text-on-surface tracking-wide">ACASO</h1>
+          <p className="font-sans text-xs text-text-muted mt-1 text-center">Store Management Terminal &bull; Sign in with your name</p>
+        </div>
+
         {error && (
-          <div className="bg-status-alert/10 border border-status-alert text-status-alert px-4 py-3 rounded-lg mb-6 font-sans text-sm font-semibold">
+          <div className="bg-status-alert/10 border border-status-alert text-status-alert px-4 py-3 rounded-xl mb-6 font-sans text-sm font-semibold flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
             {error}
           </div>
         )}
@@ -96,40 +73,59 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div>
             <label className="font-sans text-sm font-bold text-on-surface block mb-2">Your Name</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={phone}
-              onChange={e => setPhone(e.target.value)}
+              onChange={e => { setPhone(e.target.value); setError(""); }}
               className="w-full bg-surface-plate border border-border-whisper rounded-xl h-12 px-4 text-on-surface font-sans focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors placeholder:text-text-muted"
               placeholder="e.g. Krees, Princess, Mr Tosin..."
               autoComplete="username"
+              autoFocus
+              required
             />
           </div>
           <div>
             <label className="font-sans text-sm font-bold text-on-surface block mb-2">PIN</label>
-            <input 
-              type="password" 
+            <input
+              type="password"
               value={pin}
-              onChange={e => setPin(e.target.value)}
+              onChange={e => { setPin(e.target.value); setError(""); }}
               className="w-full bg-surface-plate border border-border-whisper rounded-xl h-12 px-4 text-on-surface font-sans tracking-widest focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors placeholder:text-text-muted"
               placeholder="••••"
               autoComplete="current-password"
+              required
             />
           </div>
-          <button type="submit" className="tactile-btn mt-6 w-full h-12 bg-primary text-white font-sans text-sm font-bold rounded-xl shadow-sm hover:opacity-90 transition-opacity">
-            Sign In
+          <button
+            type="submit"
+            disabled={isLoading || !phone.trim() || !pin.trim()}
+            className="mt-2 w-full h-12 bg-primary text-white font-sans text-sm font-bold rounded-xl shadow-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 tactile-btn"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              "Sign In"
+            )}
           </button>
         </form>
 
+        {/* Quick-tap team name buttons */}
         <div className="mt-6 p-3 bg-surface-plate border border-border-whisper rounded-xl">
-          <p className="font-sans text-[10px] font-bold text-text-muted uppercase tracking-wider mb-2">Team Members</p>
+          <p className="font-sans text-[10px] font-bold text-text-muted uppercase tracking-wider mb-2">Quick Select</p>
           <div className="flex flex-wrap gap-1.5">
             {['Krees', 'Princess', 'Loveth', 'Mr Tosin', 'Habeeb', 'Seyi', 'Love', 'Steph', 'Miracle', 'James', 'Josh'].map(name => (
               <button
                 key={name}
                 type="button"
-                onClick={() => setPhone(name)}
-                className="font-sans text-[10px] font-bold px-2 py-1 bg-surface rounded border border-border-whisper hover:border-primary hover:text-primary text-text-muted transition-colors"
+                onClick={() => { setPhone(name); setError(""); }}
+                className={`font-sans text-[10px] font-bold px-2 py-1 rounded border transition-colors ${
+                  phone === name
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border-whisper bg-surface hover:border-primary hover:text-primary text-text-muted"
+                }`}
               >
                 {name}
               </button>
