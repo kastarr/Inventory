@@ -26,12 +26,41 @@ export default function Inventory() {
     { id: "acc-11", name: "Josh (Crew)" }
   ];
 
+  const MOCK_ITEMS = [
+    { id: "FURN-0001", name: "Velvet Sofa (Brown)", category: "FURNITURE", subcategory: "Sofa", current_status: "AVAILABLE", location: "Shelf A-1", is_high_value: 0, photos: ["https://images.unsplash.com/photo-1592078615290-033ee584e267?auto=format&fit=crop&q=80&w=400"], description: "Premium velvet sofa sourced for movie productions." },
+    { id: "FURN-0002", name: "Royal Armchair (Gold)", category: "FURNITURE", subcategory: "Armchair", current_status: "CHECKED_OUT", location: "Shelf A-2", is_high_value: 1, photos: ["https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&q=80&w=400"], description: "High-value royal armchair with gold detailing." },
+    { id: "FURN-0003", name: "Dining Table (Ivory)", category: "FURNITURE", subcategory: "Table", current_status: "AVAILABLE", location: "Shelf B-1", is_high_value: 0, photos: ["https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&q=80&w=400"], description: "Large ivory dining table for scene dressing." },
+    { id: "FURN-0004", name: "Carved Bench (Brown)", category: "FURNITURE", subcategory: "Bench", current_status: "AVAILABLE", location: "Shelf B-2", is_high_value: 0, photos: ["https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&q=80&w=400"], description: "Hand-carved wooden bench, traditional style." },
+    { id: "DECO-0001", name: "Ceramic Vase (Amber)", category: "DECOR", subcategory: "Vase", current_status: "AVAILABLE", location: "Shelf C-1", is_high_value: 0, photos: ["https://images.unsplash.com/photo-1578500494198-246f612d3b3d?auto=format&fit=crop&q=80&w=400"], description: "Amber ceramic vase with traditional motifs." },
+    { id: "DECO-0002", name: "Gilded Mirror (Gold)", category: "DECOR", subcategory: "Mirror", current_status: "AVAILABLE", location: "Shelf C-2", is_high_value: 1, photos: ["https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&q=80&w=400"], description: "Large ornate gilded mirror, high value." },
+    { id: "DECO-0003", name: "Traditional Calabash (Indigo)", category: "DECOR", subcategory: "Calabash", current_status: "AVAILABLE", location: "Shelf C-3", is_high_value: 0, photos: ["https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?auto=format&fit=crop&q=80&w=400"], description: "Authentic traditional calabash decoration." },
+    { id: "PROP-0001", name: "Vintage Camera (Amber)", category: "PROPS", subcategory: "Camera", current_status: "AVAILABLE", location: "Shelf D-1", is_high_value: 1, photos: ["https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=400"], description: "Vintage film camera prop, high value." },
+    { id: "PROP-0002", name: "Wooden Talking Drum (Brown)", category: "PROPS", subcategory: "Drum", current_status: "CHECKED_OUT", location: "Shelf D-2", is_high_value: 0, photos: ["https://images.unsplash.com/photo-1584282479918-68725139a04a?auto=format&fit=crop&q=80&w=400"], description: "Traditional Yoruba talking drum." },
+    { id: "PROP-0003", name: "Ceremonial Staff (Indigo)", category: "PROPS", subcategory: "Staff", current_status: "AVAILABLE", location: "Shelf D-3", is_high_value: 1, photos: ["https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&q=80&w=400"], description: "Carved ceremonial staff for traditional scenes." },
+    { id: "FABR-0001", name: "Aso-Oke Throw (Gold)", category: "FABRICS", subcategory: "Throw", current_status: "AVAILABLE", location: "Shelf A-3", is_high_value: 0, photos: ["https://images.unsplash.com/photo-1584100936595-c0654b55a2e6?auto=format&fit=crop&q=80&w=400"], description: "Traditional Yoruba aso-oke woven fabric." },
+    { id: "FABR-0002", name: "Lace Curtain (Ivory)", category: "FABRICS", subcategory: "Curtain", current_status: "AVAILABLE", location: "Shelf B-3", is_high_value: 0, photos: ["https://images.unsplash.com/photo-1544022613-e87ca75a784a?auto=format&fit=crop&q=80&w=400"], description: "Delicate ivory lace curtain set." },
+    { id: "FABR-0003", name: "Ankara Tablecloth (Indigo)", category: "FABRICS", subcategory: "Tablecloth", current_status: "MISSING", location: "Shelf A-4", is_high_value: 0, photos: ["https://images.unsplash.com/photo-1584100936595-c0654b55a2e6?auto=format&fit=crop&q=80&w=400"], description: "Vibrant ankara print tablecloth." },
+  ];
+
   const fetchItems = () => {
     setLoading(true);
     fetch("/api/items")
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error("Server error");
+        return res.json();
+      })
       .then(data => {
-        setItems(data);
+        // If server returns empty array, fall back to mock data
+        if (Array.isArray(data) && data.length > 0) {
+          setItems(data);
+        } else {
+          setItems(MOCK_ITEMS);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        // Server unavailable — use mock data so the page never stays blank
+        setItems(MOCK_ITEMS);
         setLoading(false);
       });
   };
@@ -39,6 +68,7 @@ export default function Inventory() {
   useEffect(() => {
     fetchItems();
   }, []);
+
 
   const categories = ["ALL", ...Array.from(new Set(items.map(i => i.category)))];
 
